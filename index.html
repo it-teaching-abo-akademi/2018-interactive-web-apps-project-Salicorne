@@ -11,7 +11,7 @@
 </head>
 <body>
     <div class="container">
-        <a class="btn btn-primary" href="#" role="button">Add new portfolio</a>
+        
         
     </div>
     
@@ -22,7 +22,88 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
     <script type="text/babel">
-        
+        class PrimaryButton extends React.Component {
+            render() {
+                return(<button className="btn btn-primary" type="button" onClick={this.props.clickHandler} disabled={this.props.disabled}>{this.props.text}</button>);
+            }
+        }
+
+        class Portfolio extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    fancyIndex: props.k + 1
+                };
+                this.deletePortfolio = this.deletePortfolio.bind(this);
+            }
+
+            deletePortfolio(e) {
+                this.props.deleteHandler(this.props.k);
+            }
+
+            render() {
+                const portfolioStyle = {
+                    border: "1px solid black", 
+                    padding: "0.5em", 
+                    margin: "0.5em"
+                };
+                return(<div className="col-lg-6">
+                    <div style={portfolioStyle}>
+                        <div className="row">
+                            <div className="col-lg-3">Portfolio {this.state.fancyIndex}</div>
+                            <button className="col-lg-3" onClick={this.deletePortfolio}>&times;</button>
+                        </div>
+                    </div>
+                </div>);
+            }
+        }
+
+        class App extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    portfolios: [], 
+                    portfolioCounter: 0
+                };
+                // We need this bind to be able to use 'this' in the handler
+                this.addPortfolio = this.addPortfolio.bind(this);
+                this.deletePortfolio = this.deletePortfolio.bind(this);
+            }
+            addPortfolio(e) {
+                if(this.state.portfolios.length < 10) {
+                    this.setState({
+                        // React needs the key property to identify components
+                        portfolios: [].concat(this.state.portfolios, {key: this.state.portfolioCounter++}), 
+                        maxPortfolios: (this.state.portfolios.length < 10)
+                    });
+                }
+            }
+            deletePortfolio(id) {
+                console.log("Removing "+id);
+                this.setState({
+                    portfolios: this.state.portfolios.filter((p) => p.key != id), 
+                    maxPortfolios: (this.state.portfolios.length < 10)
+                });
+            }
+            render() {
+                var index : int = 0;
+                var portfoliosList = [];    // This array is used to split all portfolios into equal sized chunks, to be displayed on rows.
+                for(var i = 0; i<this.state.portfolios.length; i+= 2) {
+                    var chunk = this.state.portfolios.slice(i, i+2).map(p => <Portfolio key={p.key} k={p.key} deleteHandler={this.deletePortfolio}/>);
+                    // We push a chunk in a bootstrap row, and assign to this row an unique key
+                    portfoliosList.push(<div className="row" key={this.state.portfolios.length + i}>{chunk}</div>);
+                }
+                return (<div>
+                    <PrimaryButton text="Add new portfolio" clickHandler={this.addPortfolio} disabled={this.state.portfolios.length >= 10}/>
+                    {portfoliosList}
+                </div>);
+            }
+        }
+
+        ReactDOM.render(
+            <App/>, 
+            document.querySelector(".container")
+        );
     </script>
 </body>
 </html>
