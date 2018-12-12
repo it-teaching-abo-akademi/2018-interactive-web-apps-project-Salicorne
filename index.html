@@ -23,7 +23,7 @@
     <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
     <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.3/umd/popper.min.js" integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/js/bootstrap.min.js" integrity="sha384-ChfqqxuZUCnJSK3+MXmPNIyE6ZbWh2IMqE241rYiqJxyMiZ6OW/JmZQ5stwEULTy" crossorigin="anonymous"></script>
     <script type="text/babel">
@@ -33,85 +33,69 @@
             }
         }
 
-        class Portfolio extends React.Component {
+        class SuccessButton extends React.Component {
+            render() {
+                return(<button className="btn btn-success" type="button" onClick={this.props.clickHandler} disabled={this.props.disabled}>{this.props.text}</button>);
+            }
+        }
+
+        class Stock extends React.Component {
+            constructor(props) {
+                super(props);
+            }
+
+            render() {
+                const cName = (this.props.selected) ? "table-primary" : "";
+                return(
+                    <tr className={cName}>
+                        <td>{this.props.name}</td>
+                        <td>{this.props.value}</td>
+                        <td>{this.props.quantity}</td>
+                        <td>{this.props.value * this.props.quantity}</td>
+                        <td>Select</td>
+                    </tr>
+                );
+            }
+        }
+
+        class RenamePortfolioModal extends React.Component {
             constructor(props) {
                 super(props);
                 this.state = {
-                    name: props.name, 
-                    value: 0, 
-                    currency: '€'
+                    name: props.initialName
                 };
-                // Uncontrolled components
-                this.renameInput = React.createRef();
                 // Handlers bindings
-                this.deletePortfolio = this.deletePortfolio.bind(this);
-                this.showInEuros = this.showInEuros.bind(this);
-                this.showInDollars = this.showInDollars.bind(this);
+                this.handleChange = this.handleChange.bind(this);
                 this.rename = this.rename.bind(this);
             }
 
-            deletePortfolio(e) {
-                this.props.deleteHandler(this.props.k);
-            }
-
-            showInEuros(e) {
-                e.preventDefault(); // Prevent link anchor navigation
+            handleChange(e) {
                 this.setState({
-                    currency: '€'
+                    name: e.target.value
                 });
             }
 
-            showInDollars(e) {
-                e.preventDefault(); // Prevent link anchor navigation
-                this.setState({
-                    currency: '$'
-                });
-            }
-
-            rename(e) {
-                // Rename this instance
-                this.setState({
-                    name: this.renameInput.current.value
-                });
-                // Propagate the new name to the app
-                this.props.renameHandler(this.props.k, this.renameInput.current.value);
+            rename() {
+                // Propagate the new name to the portfolio
+                this.props.renameHandler(this.state.name);
                 // Close the modal
                 document.getElementById("modal-rename-close-"+this.props.k).click();
             }
 
             render() {
-                const portfolioStyle = {
-                    //border: "1px solid black", 
-                    padding: "0.5em", 
-                    margin: "0.5em", 
-                    boxShadow: "0px 0px 10px grey"
-                };
-                return(<div className="col-lg-6">
-                    <div style={portfolioStyle}>
-                        <div className="row">
-                            <div className="col-lg-4 font-weight-bold"><h5>{this.state.name}</h5></div>
-                            <div className="col-lg-1"><button className="btn btn-info btn-sm" data-toggle="modal" data-target={"#modal-rename-"+this.props.k}><span className="oi oi-pencil"></span></button></div>
-                            <div className="col-lg-3"><a href="#" onClick={this.showInDollars}>Show in $</a></div>
-                            <div className="col-lg-3"><a href="#" onClick={this.showInEuros}>Show in €</a></div>
-                            <div className="col-lg-1"><button className="btn btn-danger btn-sm font-weight-bold float-right" onClick={this.deletePortfolio}>&times;</button></div>
-                        </div>
-                        <p>Total value of {this.state.name} : {this.state.value}{this.state.currency}</p>
-                    </div>
-
-                    <div className="modal fade" id={"modal-rename-"+this.props.k} tabIndex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                return(
+                    <div className="modal fade" id={"modal-rename-"+this.props.k} tabIndex="-1" role="dialog" aria-hidden="true">
                     <div className="modal-dialog" role="document">
                         <div className="modal-content">
                         <div className="modal-header">
-                            <h5 className="modal-title" id="exampleModalLabel">Rename portfolio</h5>
+                            <h5 className="modal-title">Rename portfolio</h5>
                                 <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         </div>
                         <div className="modal-body">
-                            <form>
-                                <div className="form-group">
-                                    <label htmlFor={"input-rename-"+this.props.k}>New name :</label>
-                                    <input type="text" className="form-control" id={"input-rename-"+this.props.k} placeholder="Enter here the new name of this portfolio" defaultValue={this.state.name} ref={this.renameInput}></input>
-                                </div>
-                            </form>
+                            <div className="form-group">
+                                <label htmlFor={"input-rename-"+this.props.k}>New name :</label>
+                                <input type="text" className="form-control" id={"input-rename-"+this.props.k} placeholder="Enter here the new name of this portfolio" value={this.state.name} onChange={this.handleChange}></input>
+                            </div>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-secondary" data-dismiss="modal" id={"modal-rename-close-"+this.props.k}>Close</button>
@@ -120,6 +104,157 @@
                         </div>
                     </div>
                     </div>
+                );
+            }
+        }
+
+        class AddStockModal extends React.Component {
+            constructor(props) {
+                super(props);
+                this.state = {
+                    symbol: "", 
+                    quantity: 1, 
+                    canAddStock: false
+                };
+                // Handlers bindings
+                this.handleChange = this.handleChange.bind(this);
+                this.addStock = this.addStock.bind(this);
+            }
+
+            handleChange(e) {
+                this.setState({
+                    [e.target.name]: e.target.value.toUpperCase()
+                });
+            }
+
+            addStock() {
+                // Propagate the creation to the portfolio
+                this.props.addStockHandler(this.state.symbol, this.state.quantity);
+                // Close the modal
+                document.getElementById("modal-addstock-close-"+this.props.k).click();
+            }
+
+            render() {
+                const canAddStock = this.state.quantity > 0 && this.props.isCorrectSymbolHandler(this.state.symbol);
+                return(
+                    <div className="modal fade" id={"modal-addstock-"+this.props.k} tabIndex="-1" role="dialog" aria-hidden="true">
+                    <div className="modal-dialog" role="document">
+                        <div className="modal-content">
+                        <div className="modal-header">
+                            <h5 className="modal-title">Add stock</h5>
+                                <button type="button" className="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        </div>
+                        <div className="modal-body">
+                            <form>
+                                <div className="form-group">
+                                    <label htmlFor={"input-addstock-symbol-"+this.props.k}>Symbol :</label>
+                                    <input type="text" className="form-control" id={"input-addstock-symbol-"+this.props.k} placeholder="Enter here the symbol of the stock" value={this.state.symbol} onChange={this.handleChange} name="symbol" required></input>
+                                </div>
+                                <div className="form-group">
+                                    <label htmlFor={"input-addstock-quantity-"+this.props.k}>Quantity :</label>
+                                    <input type="number" min={1} step={1} className="form-control" id={"input-addstock-quantity-"+this.props.k} placeholder="Enter here the number of shares" value={this.state.quantity} onChange={this.handleChange} name="quantity"></input>
+                                </div>
+                            </form>
+                        </div>
+                        <div className="modal-footer">
+                            <button type="button" className="btn btn-secondary" data-dismiss="modal" id={"modal-addstock-close-"+this.props.k}>Close</button>
+                            <button type="button" className="btn btn-primary" onClick={this.addStock} disabled={!canAddStock}>Add stock !</button>
+                        </div>
+                        </div>
+                    </div>
+                    </div>
+                );
+            }
+        }
+
+        class Portfolio extends React.Component {
+            constructor(props) {
+                super(props);
+                // Handlers bindings
+                this.deletePortfolio = this.deletePortfolio.bind(this);
+                this.showInEuros = this.showInEuros.bind(this);
+                this.showInDollars = this.showInDollars.bind(this);
+                this.rename = this.rename.bind(this);
+                this.addStock = this.addStock.bind(this);
+            }
+
+            deletePortfolio(e) {
+                this.props.deleteHandler(this.props.k);
+            }
+
+            showInEuros(e) {
+                e.preventDefault(); // Prevent link anchor navigation
+                this.props.setCurrencyHandler(this.props.k, '€');
+            }
+
+            showInDollars(e) {
+                e.preventDefault(); // Prevent link anchor navigation
+                this.props.setCurrencyHandler(this.props.k, '$');
+            }
+
+            rename(newName) {
+                // Propagate the new name to the app
+                this.props.renameHandler(this.props.k, newName);
+            }
+
+            addStock(symbol, quantity) {
+                if(this.props.isCorrectSymbolHandler(symbol)) {
+                    var oldStocks = {};
+                    for(var i in this.props.stocks) {
+                        oldStocks[i] = this.props.stocks[i];
+                    }
+                    if(!this.props.stocks.hasOwnProperty(symbol)) {
+                        oldStocks[symbol] = {};
+                        oldStocks[symbol].value = this.props.getStockValueHandler(symbol);
+                        oldStocks[symbol].quantity = 0;
+                    }
+                    oldStocks[symbol].quantity += +quantity;
+                    // Propagate the new stock to the app
+                    this.props.setStocksHandler(this.props.k, oldStocks);
+                }
+            }
+
+            render() {
+                const portfolioStyle = {
+                    padding: "0.5em", 
+                    margin: "0.5em", 
+                    boxShadow: "0px 0px 10px grey"
+                };
+                var stocks = Object.entries(this.props.stocks).map((p) => <Stock name={p[0]} key={p[0]} value={p[1].value} quantity={p[1].quantity} selected={false}/>);
+                var value = Object.values(this.props.stocks).reduce((acc, val) => acc + val.value * val.quantity, 0).toFixed(2);
+                return(<div className="col-lg-6">
+                    <div style={portfolioStyle}>
+                        <div className="row">
+                            <div className="col-lg-4 font-weight-bold"><h5>{this.props.name}</h5></div>
+                            <div className="col-lg-1"><button className="btn btn-info btn-sm" data-toggle="modal" data-target={"#modal-rename-"+this.props.k}><span className="oi oi-pencil"></span></button></div>
+                            <div className="col-lg-3"><a href="#" onClick={this.showInDollars}>Show in $</a></div>
+                            <div className="col-lg-3"><a href="#" onClick={this.showInEuros}>Show in €</a></div>
+                            <div className="col-lg-1"><button className="btn btn-danger btn-sm font-weight-bold float-right" onClick={this.deletePortfolio}>&times;</button></div>
+                        </div><br />
+                        <table className="table table-sm">
+                            <thead className="thead-light">
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Unit value</th>
+                                    <th>Quantity</th>
+                                    <th>Total value</th>
+                                    <th>Select</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {stocks}
+                            </tbody>
+                        </table>
+                        <p>Total value of {this.props.name} : {value}{this.props.currency}</p>
+                        <div className="row">
+                            <div className="col-lg-12">
+                                <button className="btn btn-success" data-toggle="modal" data-target={"#modal-addstock-"+this.props.k}>Add stock</button>
+                            </div>
+                        </div>
+                    </div>
+                    <RenamePortfolioModal k={this.props.k} initialName={this.props.name} renameHandler={this.rename}/>
+                    <AddStockModal k={this.props.k} addStockHandler={this.addStock} isCorrectSymbolHandler={this.props.isCorrectSymbolHandler}/>
+                    
                 </div>);
             }
         }
@@ -131,42 +266,114 @@
                     portfolios: [], 
                     portfolioCounter: 0 // We use an index counter to have an unique index for each created portfolios, even when some are deleted. 
                 };
+                this.stocksData = {};   // Stocks data from iextrading.com API
+
                 // We need these bindings to be able to use 'this' in the handlers
                 this.addPortfolio = this.addPortfolio.bind(this);
                 this.deletePortfolio = this.deletePortfolio.bind(this);
                 this.renamePortfolio = this.renamePortfolio.bind(this);
+                this.setStocks = this.setStocks.bind(this);
+                this.setCurrency = this.setCurrency.bind(this);
+                this.isCorrectSymbol = this.isCorrectSymbol.bind(this);
+                this.getStockValue = this.getStockValue.bind(this);
             }
+
+            refreshSymbolsList() {
+                console.log("Refreshing symbols list...");
+                jQuery.ajax({
+                    url: "https://api.iextrading.com/1.0/tops/last", 
+                    dataType: "json", 
+                    success: (e) => { this.stocksData = Object.values(e).reduce((m, o) => { m[o.symbol] = o.price; return m; }, {}); },
+                    error: (e) => {alert(`Error while retrieving stocks symbols list...`);} 
+                });
+            }
+
+            componentDidMount() {
+                this.refreshSymbolsList();
+                this.symbolRefreshId = setInterval(() => this.refreshSymbolsList(), 1000*60);
+            }
+
+            componentWillUnmount() {
+                clearInterval(this.symbolRefreshId);
+            }
+
             addPortfolio(e) {
                 if(this.state.portfolios.length < 10) {
                     this.setState({
                         // React needs the key property to identify components
                         portfolios: [].concat(this.state.portfolios, {
                             key: this.state.portfolioCounter++, 
-                            name: "Portfolio " + this.state.portfolioCounter
+                            name: "Portfolio " + this.state.portfolioCounter,
+                            currency: '€', 
+                            stocks: {}
+                            /*
+                                {
+                                    "Symbol": {
+                                        "value": X, 
+                                        "quantity": X
+                                    }, 
+                                    ...
+                                }
+                            */
                         }), 
                         maxPortfolios: (this.state.portfolios.length < 10)
                     });
                 }
             }
+
             deletePortfolio(id) {
                 this.setState({
                     portfolios: this.state.portfolios.filter((p) => p.key != id), 
                     maxPortfolios: (this.state.portfolios.length < 10)
                 });
             }
+
             renamePortfolio(id, newName) {
                 this.setState({
                     portfolios: this.state.portfolios.map((p) => {
-                            if(p.key == id) { p.name = newName; }
-                            return p;
-                        }),
+                        if(p.key == id) { p.name = newName; }
+                        return p;
+                    }),
                 });
             }
+
+            setStocks(portfolioId, newStocks) {
+                this.setState({
+                    portfolios: this.state.portfolios.map((p) => {
+                        if(p.key == portfolioId) { p.stocks = newStocks; }
+                        return p;
+                    }),
+                });
+            }
+
+            setCurrency(portfolioId, currency) {
+                this.setState({
+                    portfolios: this.state.portfolios.map((p) => {
+                        if(p.key == portfolioId) { p.currency = currency; }
+                        return p;
+                    }),
+                });
+            }
+
+            /*
+                CACHE SYSTEM
+                We use a cache server to keep the stock values. This allows us to limit the rate of API calls
+                while maintaining a correct freshness of the results. 
+            */
+
+            isCorrectSymbol(stock) {
+                return this.stocksData.hasOwnProperty(stock);
+            }
+
+            getStockValue(stock) {
+                return this.isCorrectSymbol(stock) ? this.stocksData[stock] : 0;
+            }
+
             render() {
                 var index : int = 0;
                 var portfoliosList = [];    // This array is used to split all portfolios into equal sized chunks, to be displayed on rows.
                 for(var i = 0; i<this.state.portfolios.length; i+= 2) {
-                    var chunk = this.state.portfolios.slice(i, i+2).map(p => <Portfolio key={p.key} k={p.key} name={p.name} deleteHandler={this.deletePortfolio} renameHandler={this.renamePortfolio}/>);
+                    var chunk = this.state.portfolios.slice(i, i+2).map(p => <Portfolio key={p.key} k={p.key} name={p.name} currency={p.currency} stocks={p.stocks} deleteHandler={this.deletePortfolio} renameHandler={this.renamePortfolio} setStocksHandler={this.setStocks} setCurrencyHandler={this.setCurrency} isCorrectSymbolHandler={this.isCorrectSymbol} getStockValueHandler={this.getStockValue}/>);
                     // We push a chunk in a bootstrap row, and assign to this row an unique key
                     portfoliosList.push(<div className="row" key={this.state.portfolios.length + i}>{chunk}</div>);
                 }
