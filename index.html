@@ -182,6 +182,7 @@
                 this.rename = this.rename.bind(this);
                 this.addStock = this.addStock.bind(this);
                 this.selectStock = this.selectStock.bind(this);
+                this.deleteStocks = this.deleteStocks.bind(this);
             }
 
             deletePortfolio(e) {
@@ -226,6 +227,10 @@
                 this.props.selectHandler(this.props.k, symbol, value);
             }
 
+            deleteStocks() {
+                this.props.deleteStocksHandler(this.props.k);
+            }
+
             render() {
                 const portfolioStyle = {
                     padding: "0.5em", 
@@ -234,6 +239,7 @@
                 };
                 var stocks = Object.entries(this.props.stocks).map((p) => <Stock name={p[0]} key={p[0]} value={p[1].value} quantity={p[1].quantity} selected={p[1].selected} currency={this.props.currency} rate={this.props.rate} selectHandler={this.selectStock}/>);
                 var value = Object.values(this.props.stocks).reduce((acc, val) => acc + val.value * val.quantity * this.props.rate, 0).toFixed(2);
+                var someSelected = Object.values(this.props.stocks).filter(p => p.selected).length > 0;
                 return(<div className="col-lg-6">
                     <div style={portfolioStyle}>
                         <div className="row">
@@ -259,8 +265,11 @@
                         </table>
                         <p>Total value of {this.props.name} : {value}{this.props.currency}</p>
                         <div className="row">
-                            <div className="col-lg-12">
+                            <div className="col-lg-3">
                                 <button className="btn btn-success" data-toggle="modal" data-target={"#modal-addstock-"+this.props.k}>Add stock</button>
+                            </div>
+                            <div className="col-lg-3">
+                                <button className="btn btn-warning" onClick={this.deleteStocks} disabled={!someSelected}>Delete selected</button>
                             </div>
                         </div>
                     </div>
@@ -290,6 +299,7 @@
                 this.isCorrectSymbol = this.isCorrectSymbol.bind(this);
                 this.getStockValue = this.getStockValue.bind(this);
                 this.selectStock = this.selectStock.bind(this);
+                this.deleteStocks = this.deleteStocks.bind(this);
             }
 
             refreshSymbolsList() {
@@ -402,6 +412,23 @@
                 });
             }
 
+            deleteStocks(portfolioId) {
+                this.setState({
+                    portfolios: this.state.portfolios.map((p) => {
+                        if(p.key == portfolioId) { 
+                            p.stocks = (e => {  // Closure to apply custom filter
+                                var res = {};
+                                Object.entries(e).map(i => {
+                                    if(!i[1].selected) { res[i[0]] = i[1]; }
+                                });
+                                return res;
+                            })(p.stocks);
+                        }
+                        return p;
+                    }),
+                });
+            }
+
             /*
                 CACHE SYSTEM
                 We use a cache server to keep the stock values. This allows us to limit the rate of API calls
@@ -420,7 +447,7 @@
                 var index : int = 0;
                 var portfoliosList = [];    // This array is used to split all portfolios into equal sized chunks, to be displayed on rows.
                 for(var i = 0; i<this.state.portfolios.length; i+= 2) {
-                    var chunk = this.state.portfolios.slice(i, i+2).map(p => <Portfolio key={p.key} k={p.key} name={p.name} currency={p.currency} stocks={p.stocks} rate={p.rate} deleteHandler={this.deletePortfolio} renameHandler={this.renamePortfolio} setStocksHandler={this.setStocks} setCurrencyHandler={this.setCurrency} isCorrectSymbolHandler={this.isCorrectSymbol} getStockValueHandler={this.getStockValue} selectHandler={this.selectStock}/>);
+                    var chunk = this.state.portfolios.slice(i, i+2).map(p => <Portfolio key={p.key} k={p.key} name={p.name} currency={p.currency} stocks={p.stocks} rate={p.rate} deleteHandler={this.deletePortfolio} renameHandler={this.renamePortfolio} setStocksHandler={this.setStocks} setCurrencyHandler={this.setCurrency} isCorrectSymbolHandler={this.isCorrectSymbol} getStockValueHandler={this.getStockValue} selectHandler={this.selectStock} deleteStocksHandler={this.deleteStocks}/>);
                     // We push a chunk in a bootstrap row, and assign to this row an unique key
                     portfoliosList.push(<div className="row" key={this.state.portfolios.length + i}>{chunk}</div>);
                 }
