@@ -42,6 +42,11 @@
         class Stock extends React.Component {
             constructor(props) {
                 super(props);
+                this.select = this.select.bind(this);
+            }
+
+            select(e) {
+                this.props.selectHandler(this.props.name, e.target.checked);
             }
 
             render() {
@@ -52,7 +57,7 @@
                         <td>{(this.props.value * this.props.rate).toFixed(2)}{this.props.currency}</td>
                         <td>{this.props.quantity}</td>
                         <td>{(this.props.value * this.props.quantity * this.props.rate).toFixed(2)}{this.props.currency}</td>
-                        <td>Select</td>
+                        <td><input className="form-check-input" type="checkbox" value="" checked={this.props.selected} onChange={this.select}/></td>
                     </tr>
                 );
             }
@@ -176,6 +181,7 @@
                 this.showInDollars = this.showInDollars.bind(this);
                 this.rename = this.rename.bind(this);
                 this.addStock = this.addStock.bind(this);
+                this.selectStock = this.selectStock.bind(this);
             }
 
             deletePortfolio(e) {
@@ -208,11 +214,16 @@
                         oldStocks[symbol] = {};
                         oldStocks[symbol].value = this.props.getStockValueHandler(symbol);
                         oldStocks[symbol].quantity = 0;
+                        oldStocks[symbol].selected = false;
                     }
                     oldStocks[symbol].quantity += +quantity;
                     // Propagate the new stock to the app
                     this.props.setStocksHandler(this.props.k, oldStocks);
                 }
+            }
+
+            selectStock(symbol, value) {
+                this.props.selectHandler(this.props.k, symbol, value);
             }
 
             render() {
@@ -221,7 +232,7 @@
                     margin: "0.5em", 
                     boxShadow: "0px 0px 10px grey"
                 };
-                var stocks = Object.entries(this.props.stocks).map((p) => <Stock name={p[0]} key={p[0]} value={p[1].value} quantity={p[1].quantity} currency={this.props.currency} rate={this.props.rate} selected={false}/>);
+                var stocks = Object.entries(this.props.stocks).map((p) => <Stock name={p[0]} key={p[0]} value={p[1].value} quantity={p[1].quantity} selected={p[1].selected} currency={this.props.currency} rate={this.props.rate} selectHandler={this.selectStock}/>);
                 var value = Object.values(this.props.stocks).reduce((acc, val) => acc + val.value * val.quantity * this.props.rate, 0).toFixed(2);
                 return(<div className="col-lg-6">
                     <div style={portfolioStyle}>
@@ -278,6 +289,7 @@
                 this.setCurrency = this.setCurrency.bind(this);
                 this.isCorrectSymbol = this.isCorrectSymbol.bind(this);
                 this.getStockValue = this.getStockValue.bind(this);
+                this.selectStock = this.selectStock.bind(this);
             }
 
             refreshSymbolsList() {
@@ -325,7 +337,8 @@
                                 {
                                     "Symbol": {
                                         "value": X, 
-                                        "quantity": X
+                                        "quantity": X, 
+                                        "selected": X
                                     }, 
                                     ...
                                 }
@@ -373,6 +386,22 @@
                 });
             }
 
+            selectStock(portfolioId, symbol, value) {
+                this.setState({
+                    portfolios: this.state.portfolios.map((p) => {
+                        if(p.key == portfolioId) { 
+                            Object.entries(p.stocks).map(s => {
+                                if(s[0] == symbol) {
+                                    s[1].selected = value;
+                                }
+                                return s;
+                            })
+                        }
+                        return p;
+                    }),
+                });
+            }
+
             /*
                 CACHE SYSTEM
                 We use a cache server to keep the stock values. This allows us to limit the rate of API calls
@@ -391,7 +420,7 @@
                 var index : int = 0;
                 var portfoliosList = [];    // This array is used to split all portfolios into equal sized chunks, to be displayed on rows.
                 for(var i = 0; i<this.state.portfolios.length; i+= 2) {
-                    var chunk = this.state.portfolios.slice(i, i+2).map(p => <Portfolio key={p.key} k={p.key} name={p.name} currency={p.currency} stocks={p.stocks} rate={p.rate} deleteHandler={this.deletePortfolio} renameHandler={this.renamePortfolio} setStocksHandler={this.setStocks} setCurrencyHandler={this.setCurrency} isCorrectSymbolHandler={this.isCorrectSymbol} getStockValueHandler={this.getStockValue}/>);
+                    var chunk = this.state.portfolios.slice(i, i+2).map(p => <Portfolio key={p.key} k={p.key} name={p.name} currency={p.currency} stocks={p.stocks} rate={p.rate} deleteHandler={this.deletePortfolio} renameHandler={this.renamePortfolio} setStocksHandler={this.setStocks} setCurrencyHandler={this.setCurrency} isCorrectSymbolHandler={this.isCorrectSymbol} getStockValueHandler={this.getStockValue} selectHandler={this.selectStock}/>);
                     // We push a chunk in a bootstrap row, and assign to this row an unique key
                     portfoliosList.push(<div className="row" key={this.state.portfolios.length + i}>{chunk}</div>);
                 }
