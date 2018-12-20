@@ -49,9 +49,9 @@
                 return(
                     <tr className={cName}>
                         <td>{this.props.name}</td>
-                        <td>{this.props.value}</td>
+                        <td>{(this.props.value * this.props.rate).toFixed(2)}{this.props.currency}</td>
                         <td>{this.props.quantity}</td>
-                        <td>{this.props.value * this.props.quantity}</td>
+                        <td>{(this.props.value * this.props.quantity * this.props.rate).toFixed(2)}{this.props.currency}</td>
                         <td>Select</td>
                     </tr>
                 );
@@ -204,6 +204,7 @@
                         oldStocks[i] = this.props.stocks[i];
                     }
                     if(!this.props.stocks.hasOwnProperty(symbol)) {
+                        // Rates and currencies are handled by App
                         oldStocks[symbol] = {};
                         oldStocks[symbol].value = this.props.getStockValueHandler(symbol);
                         oldStocks[symbol].quantity = 0;
@@ -220,8 +221,8 @@
                     margin: "0.5em", 
                     boxShadow: "0px 0px 10px grey"
                 };
-                var stocks = Object.entries(this.props.stocks).map((p) => <Stock name={p[0]} key={p[0]} value={p[1].value} quantity={p[1].quantity} selected={false}/>);
-                var value = Object.values(this.props.stocks).reduce((acc, val) => acc + val.value * val.quantity, 0).toFixed(2);
+                var stocks = Object.entries(this.props.stocks).map((p) => <Stock name={p[0]} key={p[0]} value={p[1].value} quantity={p[1].quantity} currency={this.props.currency} rate={this.props.rate} selected={false}/>);
+                var value = Object.values(this.props.stocks).reduce((acc, val) => acc + val.value * val.quantity * this.props.rate, 0).toFixed(2);
                 return(<div className="col-lg-6">
                     <div style={portfolioStyle}>
                         <div className="row">
@@ -267,6 +268,7 @@
                     portfolioCounter: 0 // We use an index counter to have an unique index for each created portfolios, even when some are deleted. 
                 };
                 this.stocksData = {};   // Stocks data from iextrading.com API
+                this.USDtoEUR = 1; // USD to EUR conversion, from fixer.io API
 
                 // We need these bindings to be able to use 'this' in the handlers
                 this.addPortfolio = this.addPortfolio.bind(this);
@@ -288,13 +290,25 @@
                 });
             }
 
+            refreshCurrencyRate() {
+                jQuery.ajax({
+                    url: "http://data.fixer.io/api/latest?access_key=c2ee9ab174d4f390e2dd97796eb51968&symbols=USD", 
+                    dataType: "json", 
+                    success: (e) => { this.USDtoEUR = e.success ? 1/e.rates.USD : 1; console.log("cur : "+this.USDtoEUR); },
+                    error: (e) => { alert(`Error while retrieving currencies rates.`); } 
+                });
+            }
+
             componentDidMount() {
+                this.refreshCurrencyRate();
                 this.refreshSymbolsList();
-                this.symbolRefreshId = setInterval(() => this.refreshSymbolsList(), 1000*60);
+                this.symbolRefreshId = setInterval(() => this.refreshSymbolsList(), 1000*60*5);   // Refresh symbols list every 5 minutes. 
+                this.rateRefreshId = setInterval(() => this.refreshCurrencyRate(), 1000*60*60);   // Refresh currency rate every hour. 
             }
 
             componentWillUnmount() {
                 clearInterval(this.symbolRefreshId);
+                clearInterval(this.rateRefreshId);
             }
 
             addPortfolio(e) {
@@ -305,6 +319,7 @@
                             key: this.state.portfolioCounter++, 
                             name: "Portfolio " + this.state.portfolioCounter,
                             currency: '€', 
+                            rate: this.USDtoEUR, 
                             stocks: {}
                             /*
                                 {
@@ -349,7 +364,10 @@
             setCurrency(portfolioId, currency) {
                 this.setState({
                     portfolios: this.state.portfolios.map((p) => {
-                        if(p.key == portfolioId) { p.currency = currency; }
+                        if(p.key == portfolioId) { 
+                            p.currency = currency;
+                            p.rate = currency == '€' ? this.USDtoEUR : 1;
+                        }
                         return p;
                     }),
                 });
@@ -373,7 +391,7 @@
                 var index : int = 0;
                 var portfoliosList = [];    // This array is used to split all portfolios into equal sized chunks, to be displayed on rows.
                 for(var i = 0; i<this.state.portfolios.length; i+= 2) {
-                    var chunk = this.state.portfolios.slice(i, i+2).map(p => <Portfolio key={p.key} k={p.key} name={p.name} currency={p.currency} stocks={p.stocks} deleteHandler={this.deletePortfolio} renameHandler={this.renamePortfolio} setStocksHandler={this.setStocks} setCurrencyHandler={this.setCurrency} isCorrectSymbolHandler={this.isCorrectSymbol} getStockValueHandler={this.getStockValue}/>);
+                    var chunk = this.state.portfolios.slice(i, i+2).map(p => <Portfolio key={p.key} k={p.key} name={p.name} currency={p.currency} stocks={p.stocks} rate={p.rate} deleteHandler={this.deletePortfolio} renameHandler={this.renamePortfolio} setStocksHandler={this.setStocks} setCurrencyHandler={this.setCurrency} isCorrectSymbolHandler={this.isCorrectSymbol} getStockValueHandler={this.getStockValue}/>);
                     // We push a chunk in a bootstrap row, and assign to this row an unique key
                     portfoliosList.push(<div className="row" key={this.state.portfolios.length + i}>{chunk}</div>);
                 }
