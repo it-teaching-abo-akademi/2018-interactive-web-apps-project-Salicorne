@@ -57,7 +57,7 @@
                         <td>{(this.props.value * this.props.rate).toFixed(2)}{this.props.currency}</td>
                         <td>{this.props.quantity}</td>
                         <td>{(this.props.value * this.props.quantity * this.props.rate).toFixed(2)}{this.props.currency}</td>
-                        <td><input className="form-check-input" type="checkbox" value="" checked={this.props.selected} onChange={this.select}/></td>
+                        <td className="text-center"><input className="form-check-input" type="checkbox" value="" checked={this.props.selected} onChange={this.select}/></td>
                     </tr>
                 );
             }
@@ -211,6 +211,9 @@
                         oldStocks[i] = this.props.stocks[i];
                     }
                     if(!this.props.stocks.hasOwnProperty(symbol)) {
+                        if(Object.values(this.props.stocks).length >= 50) {
+                            return;
+                        }
                         // Rates and currencies are handled by App
                         oldStocks[symbol] = {};
                         oldStocks[symbol].value = this.props.getStockValueHandler(symbol);
@@ -254,7 +257,7 @@
                                 <tr>
                                     <th>Name</th>
                                     <th>Unit value</th>
-                                    <th>Quantity</th>
+                                    <th>Nb. of shares</th>
                                     <th>Total value</th>
                                     <th>Select</th>
                                 </tr>
