@@ -152,16 +152,27 @@ class GraphModal extends React.Component {
             labels: []
         };
         this.stocks = this.props.stocks;
+        this.resolution = "1m";
+        this.updateChart1m = this.updateChart1m.bind(this);
+        this.updateChart3m = this.updateChart3m.bind(this);
+        this.updateChart6m = this.updateChart6m.bind(this);
+        this.updateChart1y = this.updateChart1y.bind(this);
+        this.updateChart2y = this.updateChart2y.bind(this);
+        this.updateChart5y = this.updateChart5y.bind(this);
     }
 
     componentWillReceiveProps(newProps) {
         this.stocks = newProps.stocks;
-        this.updateChart("1m");
+        this.updateChart();
     }
 
-    updateChart(resolution) {
-        Object.keys(this.stocks).map(s => {
-            fetch(`https://api.iextrading.com/1.0/stock/${s}/chart/${resolution}`)
+    updateChart() {
+        this.setState({
+            datasets: {}, 
+            labels: []
+        });
+        Object.keys(this.stocks).forEach(s => {
+            fetch(`https://api.iextrading.com/1.0/stock/${s}/chart/${this.resolution}`)
                 .then(res => res.json())
                 .then(
                     res => {
@@ -177,11 +188,40 @@ class GraphModal extends React.Component {
                         });
                     }, 
                     e => {
-                        alert("Error retrieving graph data for stocks...");
+                        alert("Error retrieving graph data for stocks..."+e);
                     }
                 );
-            return s;
         });
+    }
+
+    updateChart1m() {
+        this.resolution = "1m";
+        this.updateChart();
+    }
+
+    updateChart3m() {
+        this.resolution = "3m";
+        this.updateChart();
+    }
+
+    updateChart6m() {
+        this.resolution = "6m";
+        this.updateChart();
+    }
+
+    updateChart1y() {
+        this.resolution = "1y";
+        this.updateChart();
+    }
+
+    updateChart2y() {
+        this.resolution = "2y";
+        this.updateChart();
+    }
+
+    updateChart5y() {
+        this.resolution = "5y";
+        this.updateChart();
     }
 
     render() {
@@ -206,6 +246,15 @@ class GraphModal extends React.Component {
                         </div>
                         <div className="modal-body">
                             <Line width={100} height={50} options={{ maintainAspectRatio: true }} data={data}/>
+                            <hr />
+                            <div className="row">
+                                <div className="col-lg-2 text-center"><button onClick={this.updateChart1m} type="button" className="btn btn-info">1 month</button></div>
+                                <div className="col-lg-2 text-center"><button onClick={this.updateChart3m} type="button" className="btn btn-info">3 months</button></div>
+                                <div className="col-lg-2 text-center"><button onClick={this.updateChart6m} type="button" className="btn btn-info">6 months</button></div>
+                                <div className="col-lg-2 text-center"><button onClick={this.updateChart1y} type="button" className="btn btn-info">1 year</button></div>
+                                <div className="col-lg-2 text-center"><button onClick={this.updateChart2y} type="button" className="btn btn-info">2 years</button></div>
+                                <div className="col-lg-2 text-center"><button onClick={this.updateChart5y} type="button" className="btn btn-info">5 years</button></div>
+                            </div>
                         </div>
                         <div className="modal-footer">
                             <button type="button" className="btn btn-secondary" data-dismiss="modal" id={"modal-graph-close-"+this.props.k}>Close</button>
