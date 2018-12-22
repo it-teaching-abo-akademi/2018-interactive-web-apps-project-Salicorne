@@ -176,8 +176,12 @@ class GraphModal extends React.Component {
                 .then(res => res.json())
                 .then(
                     res => {
+                        const col = [Math.floor(Math.random() * Math.floor(256)), Math.floor(Math.random() * Math.floor(256)), Math.floor(Math.random() * Math.floor(256))];
                         var u = {
                             label: s, 
+                            fill: false,
+                            backgroundColor: `rgba(${col[0]}, ${col[1]}, ${col[2]}, 0.8)`,
+                            borderColor: `rgb(${col[0]}, ${col[1]}, ${col[2]})`,
                             data: res.map(val => val.open)
                         };
                         var n = this.state.datasets;
