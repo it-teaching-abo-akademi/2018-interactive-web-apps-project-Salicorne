@@ -2,6 +2,7 @@
   "name": "app",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://it-teaching-abo-akademi.github.io/2018-interactive-web-apps-project-Timothee-Raboeuf/", 
   "dependencies": {
     "chart.js": "^2.7.3",
     "react": "^16.7.0",
