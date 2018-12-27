@@ -1,3 +1,7 @@
+# SPMS Project
+
+The landing page is accessible here : [https://it-teaching-abo-akademi.github.io/2018-interactive-web-apps-project-Timothee-Raboeuf/index.html](https://it-teaching-abo-akademi.github.io/2018-interactive-web-apps-project-Timothee-Raboeuf/index.html)
+
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
 ## Available Scripts
