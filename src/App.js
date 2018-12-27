@@ -1,6 +1,15 @@
 import React from 'react';
 import {Line} from 'react-chartjs-2';
 
+function timeToDate(time) {
+    var date = new Date(time);
+    return `${date.getFullYear()}-${(date.getMonth()+1)}-${date.getDate()}`;
+}
+
+function dateToTime(date) {
+    return new Date(date).getTime();
+}
+
 class PrimaryButton extends React.Component {
     render() {
         return(<button className="btn btn-primary" type="button" onClick={this.props.clickHandler} disabled={this.props.disabled}>{this.props.text}</button>);
@@ -140,7 +149,6 @@ class AddStockModal extends React.Component {
     }
 }
 
-
 class GraphModal extends React.Component {
     /*
         The graph modal maintains its own state
@@ -149,7 +157,9 @@ class GraphModal extends React.Component {
         super(props);
         this.state = {
             datasets: {}, 
-            labels: []
+            labels: [], 
+            dateA: timeToDate((new Date()).getTime() - 1000*60*60*24*7),
+            dateB: timeToDate((new Date()).getTime()),
         };
         this.stocks = this.props.stocks;
         this.resolution = "1m";
@@ -159,6 +169,9 @@ class GraphModal extends React.Component {
         this.updateChart1y = this.updateChart1y.bind(this);
         this.updateChart2y = this.updateChart2y.bind(this);
         this.updateChart5y = this.updateChart5y.bind(this);
+        this.updateChartCustom = this.updateChartCustom.bind(this);
+        this.updateDateA = this.updateDateA.bind(this);
+        this.updateDateB = this.updateDateB.bind(this);
     }
 
     componentWillReceiveProps(newProps) {
@@ -166,7 +179,7 @@ class GraphModal extends React.Component {
         this.updateChart();
     }
 
-    updateChart() {
+    updateChart(useCustom = false) {
         this.setState({
             datasets: {}, 
             labels: []
@@ -177,6 +190,12 @@ class GraphModal extends React.Component {
                 .then(
                     res => {
                         const col = [Math.floor(Math.random() * Math.floor(256)), Math.floor(Math.random() * Math.floor(256)), Math.floor(Math.random() * Math.floor(256))];
+                        if(useCustom) {
+                            res = res.filter(val => {
+                                var time = dateToTime(val.date);
+                                return (time >= dateToTime(this.state.dateA) && time < dateToTime(this.state.dateB));
+                            });
+                        }
                         var u = {
                             label: s, 
                             fill: false,
@@ -228,6 +247,23 @@ class GraphModal extends React.Component {
         this.updateChart();
     }
 
+    updateChartCustom(e) {
+        this.resolution = "5y"; // Todo : find the best resolution based on time frame
+        this.updateChart(true);
+    }
+
+    updateDateA(e) {
+        this.setState({
+            dateA: e.target.value
+        });
+    }
+
+    updateDateB(e) {
+        this.setState({
+            dateB: e.target.value
+        });
+    }
+
     render() {
         /* const data = {
             labels: [0, 1, 2], 
@@ -258,6 +294,15 @@ class GraphModal extends React.Component {
                                 <div className="col-lg-2 text-center"><button onClick={this.updateChart1y} type="button" className="btn btn-info">1 year</button></div>
                                 <div className="col-lg-2 text-center"><button onClick={this.updateChart2y} type="button" className="btn btn-info">2 years</button></div>
                                 <div className="col-lg-2 text-center"><button onClick={this.updateChart5y} type="button" className="btn btn-info">5 years</button></div>
+                            </div>
+                            <hr />
+                            <div className="row">
+                                <div className="col-lg-12">
+                                    <strong>Custom time frame:</strong> from &nbsp;
+                                    <input type="date" onChange={this.updateDateA} value={this.state.dateA} /> &nbsp; to &nbsp; 
+                                    <input type="date" onChange={this.updateDateB} value={this.state.dateB} min={timeToDate(dateToTime(this.state.dateA) + 1000*60*60*24*7)} /> &nbsp;
+                                    <button type="button" className="btn btn-info" onClick={this.updateChartCustom}>View</button>
+                                </div>
                             </div>
                         </div>
                         <div className="modal-footer">
