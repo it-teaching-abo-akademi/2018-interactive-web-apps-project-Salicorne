@@ -493,11 +493,22 @@ class App extends React.Component {
         this.refreshSymbolsList();
         this.symbolRefreshId = setInterval(() => this.refreshSymbolsList(), 1000*60*5);   // Refresh symbols list every 5 minutes. 
         this.rateRefreshId = setInterval(() => this.refreshCurrencyRate(), 1000*60*60);   // Refresh currency rate every hour. 
+        // Load state if we find some save data : 
+        var save = localStorage.getItem("state");
+        if(save !== null) {
+            this.setState(JSON.parse(save));
+        }
     }
 
     componentWillUnmount() {
         clearInterval(this.symbolRefreshId);
         clearInterval(this.rateRefreshId);
+    }
+
+    saveState() {
+        if(typeof(Storage) !== "undefined") {
+            localStorage.setItem("state", JSON.stringify(this.state));
+        }
     }
 
     addPortfolio(e) {
@@ -523,7 +534,7 @@ class App extends React.Component {
                 }), 
                 maxPortfolios: (this.state.portfolios.length < 10), 
                 portfolioCounter: this.state.portfolioCounter + 1, 
-        });
+        }, () => { this.saveState(); });
         }
     }
 
@@ -531,7 +542,7 @@ class App extends React.Component {
         this.setState({
             portfolios: this.state.portfolios.filter((p) => p.key !== id), 
             maxPortfolios: (this.state.portfolios.length < 10)
-        });
+        }, () => { this.saveState(); });
     }
 
     renamePortfolio(id, newName) {
@@ -540,7 +551,7 @@ class App extends React.Component {
                 if(p.key === id) { p.name = newName; }
                 return p;
             }),
-        });
+        }, () => { this.saveState(); });
     }
 
     setStocks(portfolioId, newStocks) {
@@ -549,7 +560,7 @@ class App extends React.Component {
                 if(p.key === portfolioId) { p.stocks = newStocks; }
                 return p;
             }),
-        });
+        }, () => { this.saveState(); });
     }
 
     setCurrency(portfolioId, currency) {
@@ -561,10 +572,11 @@ class App extends React.Component {
                 }
                 return p;
             }),
-        });
+        }, () => { this.saveState(); });
     }
 
     selectStock(portfolioId, symbol, value) {
+        // We do not need to save the state when selecting stocks
         this.setState({
             portfolios: this.state.portfolios.map((p) => {
                 if(p.key === portfolioId) { 
@@ -595,7 +607,7 @@ class App extends React.Component {
                 }
                 return p;
             }),
-        });
+        }, () => { this.saveState(); });
     }
 
     /*
