@@ -482,9 +482,14 @@ class App extends React.Component {
             success: (e) => { this.USDtoEUR = e.success ? 1/e.rates.USD : 1; console.log("cur : "+this.USDtoEUR); },
             error: (e) => { alert(`Error while retrieving currencies rates.`); } 
         }); */
-        fetch("http://data.fixer.io/api/latest?access_key=c2ee9ab174d4f390e2dd97796eb51968&symbols=USD")
+        
+        /*fetch("https://data.fixer.io/api/latest?access_key=c2ee9ab174d4f390e2dd97796eb51968&symbols=USD")
         .then(res => res.json())
         .then((e) => { this.USDtoEUR = e.success ? 1/e.rates.USD : 1; console.log("cur : "+this.USDtoEUR); },
+        (e) => { alert(`Error while retrieving currencies rates.`);})*/
+        fetch("https://www.alphavantage.co/query?function=CURRENCY_EXCHANGE_RATE&from_currency=USD&to_currency=EUR&apikey=VIHZO1S72BPPDIEL")
+        .then(res => res.json())
+        .then((e) => { this.USDtoEUR = e["Realtime Currency Exchange Rate"]["5. Exchange Rate"]; console.log("cur : "+this.USDtoEUR); },
         (e) => { alert(`Error while retrieving currencies rates.`);})
     }
 

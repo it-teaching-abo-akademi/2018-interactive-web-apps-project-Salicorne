@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/2018-interactive-web-apps-project-Timothee-Raboeuf/precache-manifest.b80b4e8dcb5695ddbaca4e00b5202181.js"
+  "/2018-interactive-web-apps-project-Timothee-Raboeuf/precache-manifest.8c823c952afb4f8732ca5b4c1b927943.js"
 );
 
 workbox.clientsClaim();
